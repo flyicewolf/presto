@@ -75,7 +75,7 @@ public final class OriginalExpressionUtils
      * OriginalExpression should not exist after optimization or serialized over the wire.
      * All OriginalExpression should be translated to other corresponding RowExpression objects ultimately.
      */
-    private static final class OriginalExpression
+    public static final class OriginalExpression
             extends RowExpression
     {
         private final Expression expression;

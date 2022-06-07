@@ -161,6 +161,7 @@ public class CoordinatorModule
         binder.install(new FailureDetectorModule());
         jaxrsBinder(binder).bind(NodeResource.class);
         jaxrsBinder(binder).bind(WorkerResource.class);
+        jaxrsBinder(binder).bind(OptimizerStepResource.class);
         httpClientBinder(binder).bindHttpClient("workerInfo", ForWorkerInfo.class);
 
         // query monitor

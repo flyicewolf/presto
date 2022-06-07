@@ -52,6 +52,7 @@ import com.facebook.presto.sql.analyzer.RelationType;
 import com.facebook.presto.sql.analyzer.Scope;
 import com.facebook.presto.sql.parser.SqlParser;
 import com.facebook.presto.sql.planner.StatisticsAggregationPlanner.TableStatisticAggregation;
+import com.facebook.presto.sql.planner.iterative.IterativeOptimizer;
 import com.facebook.presto.sql.planner.optimizations.PlanNodeSearcher;
 import com.facebook.presto.sql.planner.optimizations.PlanOptimizer;
 import com.facebook.presto.sql.planner.plan.DeleteNode;
@@ -64,6 +65,8 @@ import com.facebook.presto.sql.planner.plan.StatisticsWriterNode;
 import com.facebook.presto.sql.planner.plan.TableFinishNode;
 import com.facebook.presto.sql.planner.plan.TableWriterNode;
 import com.facebook.presto.sql.planner.plan.TableWriterNode.DeleteHandle;
+import com.facebook.presto.sql.planner.planPrinter.OptimizerUtils;
+import com.facebook.presto.sql.planner.planPrinter.PlanPrinter;
 import com.facebook.presto.sql.planner.sanity.PlanChecker;
 import com.facebook.presto.sql.tree.Analyze;
 import com.facebook.presto.sql.tree.Cast;
@@ -79,6 +82,7 @@ import com.facebook.presto.sql.tree.NullLiteral;
 import com.facebook.presto.sql.tree.Query;
 import com.facebook.presto.sql.tree.RefreshMaterializedView;
 import com.facebook.presto.sql.tree.Statement;
+import com.facebook.presto.util.GraphvizPrinter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -190,12 +194,24 @@ public class LogicalPlanner
         planChecker.validateIntermediatePlan(root, session, metadata, sqlParser, variableAllocator.getTypes(), warningCollector);
         boolean enableVerboseRuntimeStats = SystemSessionProperties.isVerboseRuntimeStatsEnabled(session);
         if (stage.ordinal() >= Stage.OPTIMIZED.ordinal()) {
+            int index = 0;
             for (PlanOptimizer optimizer : planOptimizers) {
                 long start = System.nanoTime();
                 root = optimizer.optimize(root, session, variableAllocator.getTypes(), variableAllocator, idAllocator, warningCollector);
                 requireNonNull(root, format("%s returned a null plan", optimizer.getClass().getName()));
                 if (enableVerboseRuntimeStats) {
                     session.getRuntimeStats().addMetricValue(String.format("optimizer%sTimeNanos", optimizer.getClass().getSimpleName()), System.nanoTime() - start);
+                }
+
+                String optimizerInfo = optimizer.getClass().getSimpleName();
+                if (optimizer instanceof IterativeOptimizer) {
+                    optimizerInfo = ((IterativeOptimizer) optimizer).getRulesInfo();
+                }
+                try {
+                    OptimizerUtils.printGraphVizToTmpPlanDir("/tmp/plan/", index++, optimizerInfo, root, variableAllocator.getTypes(), session, metadata.getFunctionAndTypeManager());
+                }
+                catch (Throwable e) {
+                    e.printStackTrace();
                 }
             }
         }

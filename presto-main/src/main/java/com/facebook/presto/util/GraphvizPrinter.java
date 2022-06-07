@@ -352,7 +352,7 @@ public final class GraphvizPrinter
             else {
                 columns = Joiner.on(", ").join(node.getOutputVariables());
             }
-            printNode(node, format("ExchangeNode[%s]", node.getType()), columns, NODE_COLORS.get(NodeType.EXCHANGE));
+            printNode(node, format("[%s][%s]", node.getScope(), node.getType()), columns, NODE_COLORS.get(NodeType.EXCHANGE));
             for (PlanNode planNode : node.getSources()) {
                 planNode.accept(this, context);
             }
@@ -412,7 +412,7 @@ public final class GraphvizPrinter
                     // skip identity assignments
                     continue;
                 }
-                builder.append(format("%s := %s\\n", entry.getKey(), formatter.apply(entry.getValue())));
+                //builder.append(format("%s := %s\\n", entry.getKey(), formatter.apply(entry.getValue())));
             }
 
             printNode(node, "Project", builder.toString(), NODE_COLORS.get(NodeType.PROJECT));
@@ -464,7 +464,7 @@ public final class GraphvizPrinter
         @Override
         public Void visitTableScan(TableScanNode node, Void context)
         {
-            printNode(node, format("TableScan[%s]", node.getTable()), NODE_COLORS.get(NodeType.TABLESCAN));
+            printNode(node, format("TableScan[%s]", node.getTable().getConnectorHandle()), NODE_COLORS.get(NodeType.TABLESCAN));
             return null;
         }
 

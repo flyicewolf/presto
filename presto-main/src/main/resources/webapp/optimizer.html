@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="vendor/jquery/jquery-2.2.3.min.js"></script>
+    <script type="text/javascript" src="vendor/viz/viz.js"></script>
+    <script type="text/javascript" src="vendor/viz/full.render.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+var httpRequest = new XMLHttpRequest();
+httpRequest.open('GET', '/v1/graphviz/list', true);
+httpRequest.send();
+httpRequest.onreadystatechange = function () {
+    if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+        var data = httpRequest.responseText;
+        var obj = JSON.parse(data)
+        var table="<table border='1' cellspacing='0'>";
+        for(var i in obj) {
+              table += "<tr>";
+              table = table+"<td>"+"<a href='graphviz.html?id="+obj[i]+"'>"+obj[i]+"</a>"+"</td>";
+              table+="</tr>";
+            }
+            table+="</table>";
+
+        var bodys = document.getElementsByTagName('body')[0];
+        bodys.innerHTML = table;
+    }
+};
+
+</script>
+</body>
+</html>

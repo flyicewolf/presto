@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.facebook.presto.spi.StandardErrorCode.OPTIMIZER_TIMEOUT;
@@ -55,6 +56,7 @@ public class IterativeOptimizer
     private final CostCalculator costCalculator;
     private final List<PlanOptimizer> legacyRules;
     private final RuleIndex ruleIndex;
+    private final String rulesInfo;
 
     public IterativeOptimizer(RuleStatsRecorder stats, StatsCalculator statsCalculator, CostCalculator costCalculator, Set<Rule<?>> rules)
     {
@@ -72,6 +74,9 @@ public class IterativeOptimizer
                 .build();
 
         stats.registerAll(newRules);
+        this.rulesInfo = newRules.stream()
+                .map(rule -> rule.getClass().getSimpleName())
+                .collect(Collectors.joining(","));
     }
 
     @Override
@@ -292,5 +297,10 @@ public class IterativeOptimizer
                 throw new PrestoException(OPTIMIZER_TIMEOUT, format("The optimizer exhausted the time limit of %d ms", timeoutInMilliseconds));
             }
         }
+    }
+
+    public String getRulesInfo()
+    {
+        return rulesInfo.length() > 128 ? rulesInfo.substring(0, 128) : rulesInfo;
     }
 }
